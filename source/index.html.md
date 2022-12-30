@@ -23,14 +23,23 @@ meta:
     content: Documentation for the Kittn API
 ---
 
-# Introduction
+# 簡介
 
-Welcome to the libggafx! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
+Libggafx是一個模擬Gameboy Advance(GBA) PPU的函式庫，此函式庫會依照系統當前的狀態繪製出相對應的畫面
 
-We have language bindings in Shell, Ruby, Python, and JavaScript! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+## 目錄
+-  [GBA 圖形系統規格](#"GBA 圖形系統規格")
 
-This example API documentation page was created with [Slate](https://github.com/slatedocs/slate). Feel free to edit it and use it as a base for your own API's documentation.
+# GBA 圖形系統規格
 
+GBA依靠一顆訂製的圖形核心Pixel Processing Unit(PPU)來處理以及繪製遊戲圖形，以下是其輸出規格:
+- 240 x 160 LCD 屏幕
+- 最大同時顯色數: 32768
+- 支持數種圖形特效:
+	- 旋轉/縮放
+	- 半透明(α blending)
+	- 淡入淺出(fade-in/out)
+	- 馬賽克(mosiac)
 # Authentication
 
 > To authorize, use this code:
