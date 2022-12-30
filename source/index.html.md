@@ -30,13 +30,14 @@ Libggafx是一個模擬Gameboy Advance(GBA) PPU的函式庫，此函式庫會依
 # GBA graphics system specification
 
 GBA依靠一顆訂製的圖形核心Pixel Processing Unit(PPU)來處理以及繪製遊戲圖形，以下是其輸出規格:
-- 240 x 160 LCD 屏幕
-- 最大同時顯色數: 32768
-- 支持數種圖形特效:
-	- 旋轉/縮放
-	- 半透明(α blending)
-	- 淡入淺出(fade-in/out)
-	- 馬賽克(mosiac)
+* 240 x 160 LCD 屏幕
+* 最大同時顯色數: 32768
+* 支持數種圖形特效:
+    * 旋轉/縮放
+    * 半透明(α blending)
+    * 淡入淺出(fade-in/out)
+    * 馬賽克(mosiac)
+
 # Authentication
 
 > To authorize, use this code:
