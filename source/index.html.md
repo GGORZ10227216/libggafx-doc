@@ -26,18 +26,22 @@ meta:
 # 簡介
 
 Libggafx是一個模擬Gameboy Advance(GBA) PPU的函式庫，此函式庫會依照系統當前的狀態繪製出相對應的畫面
+# GBA graphics system specification
 
-# GBA graphics system speification
+- GBA依靠一顆訂製的圖形核心Pixel Processing Unit(PPU)來處理以及繪製遊戲圖形，以下是其輸出規格:
+	- 240 x 160 LCD 屏幕
+	- 最大同時顯色數: 32768
+	- 支持數種圖形特效:
+		- [旋轉/縮放](#affine)
+		- [半透明(α blending)](#alpha-blending)
+		- [淡入淺出(fade-in/out)](#fade)
+		- [馬賽克(mosiac)](#mosiac)
+	- 96KBytes VRAM + 1KBytes Palette + 1KBytes OAM
+	
+<aside class="notice">
+	有關memory layout，請參閱<a href="#vram-layout">VRAM layout</a>
+</aside>
 
-GBA依靠一顆訂製的圖形核心Pixel Processing Unit(PPU)來處理以及繪製遊戲圖形，以下是其輸出規格:
-- 240 x 160 LCD 屏幕
-- 最大同時顯色數: 32768
-- 支持數種圖形特效:
-	- 旋轉/縮放
-	- 半透明(α blending)
-	- 淡入淺出(fade-in/out)
-	- 馬賽克(mosiac)
-- 96KBytes VRAM + 1KBytes Palette + 1KBytes OAM 
 # PPU processing flowchart
 
 - 擷取自 AGB Programming Manual Version 1.1 p15 CPU Block Diagram
@@ -48,23 +52,19 @@ GBA依靠一顆訂製的圖形核心Pixel Processing Unit(PPU)來處理以及繪
 	1. 繪製背景圖層
 	2. 繪製Sprite(OBJ)
 	3. 進行z index checking
-	    - 就是依照前後順序來疊合圖層
-	 4. 如果是Mode[0, 1, 2]則使用palette上色，反之為bitmap mode，跳過上色
-	 5. 特殊效果處理
-
+		- 就是依照前後順序來疊合圖層
+	4. 如果是Mode[0, 1, 2]則使用palette上色，反之為bitmap mode，跳過上色
+	5. 特殊效果處理
 # Background drawing
 
 GBA在繪製Background(BG)圖層，一共有6種mode，mode [0, 1 ,2]為基於character的tile mode
 mode [4 ,5, 6]則是直接繪製pixel的bitmap mode，以下會個別解釋
-
 ## Character Mode (BG Mode 0-2)
 
 此模式會利用預先準備好的Character來組合出各BG圖層的內容，此模式的工作效率較bitmap模式來得高，因此大部分的商業遊戲都會使用此模式進行遊戲畫面繪製
 
 <aside class="notice">
-### Character format
-
-character我們可以把他理解成一個大小為8\*8的小圖塊，遊戲程式會在需要的時候將這些character搬移進VRAM中進行繪製，詳細請參閱[Character drawing](#Character-drawing)
+character我們可以把他理解成一個大小為8*8的小圖塊，遊戲程式會在需要的時候將這些character搬移進VRAM中進行繪製，詳細請參閱<a href="#Character-drawing">Character drawing</a>
 </aside>
 
 > To authorize, use this code:
