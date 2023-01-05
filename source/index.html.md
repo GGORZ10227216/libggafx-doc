@@ -55,6 +55,7 @@ Libggafx是一個模擬Gameboy Advance(GBA) PPU的函式庫，此函式庫會依
 		- 就是依照前後順序來疊合圖層
 	4. 如果是Mode[0, 1, 2]則使用palette上色，反之為bitmap mode，跳過上色
 	5. 特殊效果處理
+
 # Background drawing
 
 GBA在繪製Background(BG)圖層，一共有6種mode，mode [0, 1 ,2]為基於character的tile mode
