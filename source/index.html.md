@@ -48,7 +48,7 @@ GBA依靠一顆訂製的圖形核心Pixel Processing Unit(PPU)來處理以及繪
 	1. 繪製背景圖層
 	2. 繪製Sprite(OBJ)
 	3. 進行z index checking
-		- 就是依照前後順序來疊合圖層
+	    - 就是依照前後順序來疊合圖層
 	 4. 如果是Mode[0, 1, 2]則使用palette上色，反之為bitmap mode，跳過上色
 	 5. 特殊效果處理
 
