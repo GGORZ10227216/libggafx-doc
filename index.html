@@ -322,12 +322,7 @@
             <a href="#gba-graphics-system-specification" class="toc-h1 toc-link" data-title="GBA graphics system specification">GBA graphics system specification</a>
           </li>
           <li>
-            <a href="#ppu-processing-flowchart" class="toc-h1 toc-link" data-title="PPU processing flowchart">PPU processing flowchart</a>
-              <ul class="toc-list-h2">
-                  <li>
-                    <a href="#character-mode-bg-mode-0-2" class="toc-h2 toc-link" data-title="Character Mode (BG Mode 0-2)">Character Mode (BG Mode 0-2)</a>
-                  </li>
-              </ul>
+            <a href="#authentication" class="toc-h1 toc-link" data-title="Authentication">Authentication</a>
           </li>
           <li>
             <a href="#kittens" class="toc-h1 toc-link" data-title="Kittens">Kittens</a>
@@ -358,8 +353,7 @@
         <h1 id='82fb364030'>簡介</h1>
 <p>Libggafx是一個模擬Gameboy Advance(GBA) PPU的函式庫，此函式庫會依照系統當前的狀態繪製出相對應的畫面</p>
 <h1 id='gba-graphics-system-specification'>GBA graphics system specification</h1>
-<ul>
-<li>GBA依靠一顆訂製的圖形核心Pixel Processing Unit(PPU)來處理以及繪製遊戲圖形，以下是其輸出規格:
+<p>GBA依靠一顆訂製的圖形核心Pixel Processing Unit(PPU)來處理以及繪製遊戲圖形，以下是其輸出規格:</p>
 
 <ul>
 <li>240 x 160 LCD 屏幕</li>
@@ -367,49 +361,13 @@
 <li>支持數種圖形特效:
 
 <ul>
-<li><a href="#affine">旋轉/縮放</a></li>
-<li><a href="#alpha-blending">半透明(α blending)</a></li>
-<li><a href="#fade">淡入淺出(fade-in/out)</a></li>
-<li><a href="#mosiac">馬賽克(mosiac)</a></li>
-</ul></li>
-<li>96KBytes VRAM + 1KBytes Palette + 1KBytes OAM</li>
+<li>旋轉/縮放</li>
+<li>半透明(α blending)</li>
+<li>淡入淺出(fade-in/out)</li>
+<li>馬賽克(mosiac)</li>
 </ul></li>
 </ul>
-
-<aside class="notice">
-    有關memory layout，請參閱<a href="#vram-layout">VRAM layout</a>
-</aside>
-<h1 id='ppu-processing-flowchart'>PPU processing flowchart</h1>
-<ul>
-<li>擷取自 AGB Programming Manual Version 1.1 p15 CPU Block Diagram
-<p align="center">
-<img src="https://lh3.googleusercontent.com/fife/AAbDypC7XHXLnbAgRNjNl9T0HITXat5RNv7VoNs8C7kwUla4ffKY5Rw6YIRgN5Rc6HPFV8BqO9QjbY4EswrCwDjF7JUACxEGWsbs17ya5kwj7T86MsNU8l5U6_JHYRSNGFEdl1Xj--bplVy6UmxOV0aGYOVYaKzCPKhffUA2CDPnubDmMPOavWuyKSt9y5l1Z7IcrcVC7ryhU0_xkwcyU0Y8yDMrFY6YgmON9ja0bYwM50ntJAzBbI0vkOr-ITkd0CU_SuRgwRpNF-dIMz4ryOmZ99BB7KLqx9tHDAEC6MQuPLRY7RnC2mhZsV9JFzGCudBNC2egCBxranKz8pEHR_7Dd7pcEbmktrhP4v6AD0JD9o7Hidhm5eFDYqWCyGoxmpFz05QaEc0B7U96Q1FR8zNbrK2Z4e7H5NN1RoWYKzc3uTFJIDupwQC0cytVvM3Q1Z6C6QIUPT88cmREWywvWtXXsD2XW5M12jpLxTeJVLhJXOlyJUWHOJeXZjPcu87I7cdX5V_S_vTWipE4P5-lx_BLKgmsOhaJmvThu--ubeuor2mC2TsrU-K2NJb89FaSKccnMkxsEyM_sKSuw_FdTJz2_eYq9EjRFQp8nSldhMdDVHuHwXmHOVAIJ65KrjldMOguKRJxSXNDn1HZ29VCRnaw_QRs9ZfY3hm8FAD7UUzRntXoJxGqzmjcA_o2XYZMx1Ov8le6Q4FdD1xtGDiv1DJ_rf3D-LeGXvq6gltdw-JIqdQxB-4baScdz41QRNR5GskeYbc_FzyXy_AhnsxVBAbkSf2k5YDQL3ESR3-nCtYYzmpHTeLvOnhLE1slRh5lqL_UkXCiC7oMq230tYa-JZRr2TPKzDMATk3GU6srI7hNB1CrHe9F7pCURCXiT76bwsvEqKf-9Ydylo8FzvDw15LpTKLKx6OyOKDY1XxOhDQvrkPSFYN9eR2G2KjGW5poXcQTfEmznEudj4rrBJEuR17qSjzB11TRg_iygh_otA5OIxQANRXnB5L0iUC7-oAdZ24hch9_Ulmp2wzHB3aGNyQ_pgFN61dDfzn5m8BYMY25-oTotFZiy3l4FATOE8pp0J-8RdjngnRkjgX8TMxcvIu2W7VB86e8XjBX2wQSOdGugIPdtLGext73iuaEUJAbT4kQ01XWz2FKcTow-pJqpwLHWCshGBzj6JdJdFboOcqYdyskd7efyBdwfQKx0C3ERM6fZbna49XRQuMadU9EcqWAMLLdeKA2BiPH2keDXyWtJl4x5WqPOCGqviB_Ujs2_a4MhFa38rp1kcrLVDCPL13OZSZmvpAWYmn4E6Sq91sYQR4MOcuJgziC4L3Jv2gHKkW2tFl7aw-kJfIM9AJpMR9OS-ATdVfyLtIkVKWGVsOxbiaBNzxfOHxC7VVIDvNuDtzlCyvE9ZE9U6wrXwsToqEytEY0tznseugepUpIj8ud0rEl4YpUIXO9vGWbOkdMb4az0bW4chNFefalbNanQ94=w958-h911">
-</p></li>
-<li>不難看出每一幀遊戲畫面都是依照以下的處理流程在進行繪製:
-
-<ol>
-<li>繪製背景圖層</li>
-<li>繪製Sprite(OBJ)</li>
-<li>進行z index checking
-
-<ul>
-<li>就是依照前後順序來疊合圖層</li>
-</ul></li>
-<li>如果是Mode[0, 1, 2]則使用palette上色，反之為bitmap mode，跳過上色</li>
-<li>特殊效果處理
-# Background drawing</li>
-</ol></li>
-</ul>
-
-<p>GBA在繪製Background(BG)圖層，一共有6種mode，mode [0, 1 ,2]為基於character的tile mode
-mode [4 ,5, 6]則是直接繪製pixel的bitmap mode，以下會個別解釋</p>
-<h2 id='character-mode-bg-mode-0-2'>Character Mode (BG Mode 0-2)</h2>
-<p>此模式會利用預先準備好的Character來組合出各BG圖層的內容，此模式的工作效率較bitmap模式來得高，因此大部分的商業遊戲都會使用此模式進行遊戲畫面繪製</p>
-
-<aside class="notice">
-character我們可以把他理解成一個大小為8*8的小圖塊，遊戲程式會在需要的時候將這些character搬移進VRAM中進行繪製，詳細請參閱<a href="#Character-drawing">Character drawing</a>
-</aside>
-
+<h1 id='authentication'>Authentication</h1>
 <blockquote>
 <p>To authorize, use this code:</p>
 </blockquote>
