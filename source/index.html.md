@@ -55,14 +55,37 @@ Libggafx是一個模擬Gameboy Advance(GBA) PPU的函式庫，此函式庫會依
 		- 就是依照前後順序來疊合圖層
 	4. 如果是Mode[0, 1, 2]則使用palette上色，反之為bitmap mode，跳過上色
 	5. 特殊效果處理
-
+- 更準確地來說，每一幀顯示畫面都是逐行繪製的
+	- 有一些特殊效果必須依賴這個特性才能正確顯示，所以想要投機取巧的一次畫完整個畫面應該是**不可行**
+	- 每一行(Row)繪製完畢後會觸發系統的H-Blank，每一幀繪製完畢後會觸發系統的V-Blank，詳情請參閱[PPU interrupt mechanism](#PPU-interrupt-mechanism)
+- libggafx的做法是用一個drawing cursor，一路從[0, 0]繪製到[239, 0]，接著再換到[0, 1]~[239, 1]，最終整個幀的繪製會結束於[239, 159]
+	- 對於每一row，libggafx都會分別繪製出所有的BG row & Sprite row, 再根據各圖層的z index做疊合，最後進行特效處理
 # Background drawing
 
 GBA在繪製Background(BG)圖層，一共有6種mode，mode [0, 1 ,2]為基於character的tile mode
 mode [4 ,5, 6]則是直接繪製pixel的bitmap mode，以下會個別解釋
 ## Character Mode (BG Mode 0-2)
 
+Character Mode是統稱，泛指Mode 0, 1, 2這三種基於character顯示的繪製模式，這三種模式在使用上也有點差異，詳見下表
+
+<p align="center">
+	<img src="https://lh3.googleusercontent.com/fife/AAbDypAFWtrthCQIW-q-AecbUAusMM85aCUOOHOnuvu71ZYulHxafE7PNcPu3swv5Tsh5JXgT115icBo9l7_XhA3SdHNTnb_e2clt7A-Ehxud4DFbPRGHB49A1Rhf7SwgS54c4-AB2qWPfLKJvpAxBA8vsGVg3jXQC4tLEg0KeqHsBhpOUYdy7PRY_55GxzeW5mG6PCgT3KUnSQT_lm1H08POmz-HTfZsZv3nHjdOmU5QXgHe3gQP8XuozXvvyOnVUybkDavP2M78-4xTlVoC55hm8odRvvzWXdT_PJT9gzcyWi-8jBOzOFgu0_3w64mFjqOd81kW5oyN-vaz9JxZbi1Y7SvK6rYhXIEJAEizNhS92ZIWScgn1EO5yqYDvogz62BO2BleRLQmJSTaBETkcOq6B-4HIntr8xTZ86-TlSWW_RB_vg39SiBqnGxZu3A-0ELF-x_iLfDLx8CXYOVKthjnt4MLlMKvx907GFj2jf0InkxkxhJ82aOM1X1JkKO2ZnSfRuF7_-LGYJHbPmpsxKC8h_T5up_ABCurAv5SW8fSW2QkeM9BZHsxJkUWZiUk1XtLZfaaLTVZi1d0dsb7TLfn6HjqP3FhGTuWjQDO4zjEWn_lGeLUuuTOQlB2oXYc2eVYUmJkhha3-ItYxOk6aeiEsH3YYhXYoLAWdB8lEU8J5fV-0uLOYQlbzKgySl6LzwJoadCkmMbu_g9Qh5HXCRDCY0rqu9hsaZaBaED_C7B1iew1Wjr7stfhwzeKo31LOdq9ON8ZVGH74ikw0h1F2tcUw8G1rCJ-K1R92ny2KOKtbFj-nnSPOpR3BP3AL0dV32Gp1LOoMp0d6-gzHtnDAdMDJVNk4o_OzoRUrjdL1G8gPYsd0XI6dR4_534l7E70sf7TCTmVAaYTtx-L9dS4ABBhUZWZKfBC64mMEa6dh75VSgk3q-X2S9JfSr0Hgzd9pUBpDSs2my5Yzjy30GXDU76LhCz2Z0fZvbw2UxS9s7H-1Ir0_jrcm2_VLA57AAuj1vyBaAT8uTswBpYkblmkbUcDorPiojHbA6ACZY-OmMgXLQrU9Z1r_IGsCqRSq6UlgFT3Hltv-k5p0TXlJ8wttPcVL5s74hFVBPMUWrjCvr2ibzjdKW1JT6qsWffNkqLIfeMemGIJUKfzDyT3TjvlYzudRlr8ntGjEqh2Zgqm-XcD0-xfN6NHrBC7MnVMZY85SqfxMnAbNAGYK9BYhojrxaGsAWKh4sGRXIKvgvmC7lG0pylFObXMpPnEUSCkKluQ4DZ7MmTT_Y3oXPTMtC2DQqFS62w5SZHdMySTKDTUpW40MqjkQf1dYuFMrIH_75ONoZrlkebLFbuSJQQ4YtJBkZ0paD-VJ6oAoB7F_ppEO0xhdlZt8_-zb4hCyRPCu8QMr7_LIMoGZY1lOV00c2JkD8WYt4rETgzZLD6DiwDMrSbOJcPZiC7ZVr-UmziRCXf0D79c6awtEdXLEtkAbzbdL8=w964-h958">
+</p>
+<aside class="notice">
+Feature:
+	<ul>
+		<li>[BG圖層]水平/垂直捲動</li>
+		<li>[character]水平/垂直翻轉</li>
+		<li>[BG/Character]馬賽克效果</li>
+		<li>[BG/Character]alpha blending</li>
+		<li>[BG/Character]淡入淺出</li>
+		<li>[BG/Character]z index</li>
+	</ul>
+</aside>
+
 此模式會利用預先準備好的Character來組合出各BG圖層的內容，此模式的工作效率較bitmap模式來得高，因此大部分的商業遊戲都會使用此模式進行遊戲畫面繪製
+
+
 
 <aside class="notice">
 character我們可以把他理解成一個大小為8*8的小圖塊，遊戲程式會在需要的時候將這些character搬移進VRAM中進行繪製，詳細請參閱<a href="#Character-drawing">Character drawing</a>
