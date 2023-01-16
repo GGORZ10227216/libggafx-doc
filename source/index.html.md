@@ -73,231 +73,59 @@ Character Mode是統稱，泛指Mode 0, 1, 2這三種基於character顯示的繪
 </p>
 <aside class="notice">
 Feature:
-	<ul>
+	<ol>
 		<li>[BG圖層]水平/垂直捲動</li>
 		<li>[character]水平/垂直翻轉</li>
 		<li>[BG/Character]馬賽克效果</li>
 		<li>[BG/Character]alpha blending</li>
 		<li>[BG/Character]淡入淺出</li>
 		<li>[BG/Character]z index</li>
-	</ul>
+	</ol>
 </aside>
+
+### Drawing step of character mode background
+
+- PPU在繪製每一個character mode background圖層時，都必須要參考:
+	- [Screen memory](#Screen-memory)
+		- 用來描述Character如何在圖層中分布
+	- [Character memory](#Character-memory)
+		- 描述組成圖形的基本8*8圖塊(tile)之內容
+- libggafx會依照以下的步驟進行每一層的Background圖層繪製
+	1. 參考該圖層的[BGCNT](#BGCNT)來解析Screen memory
+	2. 在實際繪製的過程中我們會有兩個cursor
+		- Drawing cursor: 指向實際LCD上的pixel座標
+		- Screen cursor: 指向Screen memory的pixel座標
+		- Text mode: 
+			- 若當前的drawing cursor位於[60, 120], 且[HOFS, VOFS] = [10, 10],  則Screen cursor即為[60 + 10, 120 + 10] = [70, 130]
+			- 由上述流程可以得知Screen cursor有可能會超出Screen的範圍(常見於256 * 256的狀況)，因此我們必須要再做mod(eg. [cursor.x, cursor.y] = [cursor.x % SCREEN_W, cursor.y % SCREEN_H])
+			- 確定正確的screen cursor座標後，我們要再進一步將其轉換成正確的screen memory offset，才能存取正確的screen data
+				- 由於每一個character都是8 * 8，所以我們先將screen cursor都除8(>> 3)，計算出當前的screen cursor位於哪一個character中，我們將此xy稱為**screen_data_cursor**
+				- 接下來根據當前的SCREEN_W計算出screen的每一row會有幾個character，我們稱它為**charPerRow**，算法就是SCREEN_W / 8
+				- 要計算出screen memory offset，公式為
+				 > (charPerRow * screen_data_cursor.y + screen_data_cursor.x) * 2
+				- 乘2是因為text mode的每一個screen data都是2 byte
+			- 在計算完screen memory offset後，我們需要將此offset加到base address上才會是正確的screen data address
+				- screen data在VRAM中以0x4000 byte為分割單位，因此想要計算base address必須先從BGCNT[08:12]讀取Screen Base Block，在乘上0x4000，最後加上VRAM base addr[0x0600'0000]，就會是base address
+				- 雖然每一個Screen base block是0x4000bytes，但還是會有算上offset後，位置跑到另外一個block的狀況發生，此乃正常現象，切勿驚慌
+
+	4. 確認當前的drawing cursor位於character的中的位置，圖取該位置的pixel data
+	5. 將該palette index寫入BG row buffer，結束繪製流程
+我們可以重點留意以下數點資訊:
+
+- 僅有Mode 1, 2可支援旋轉/縮放
+- 各Mode所能夠顯示的Screen數量與尺寸並不相同(詳見[Screen memory](#Screen-memory))
+- 調色盤的格式可分為16*16以及256*1(詳見[Palette memory](#Palette-memory))
 
 此模式會利用預先準備好的Character來組合出各BG圖層的內容，此模式的工作效率較bitmap模式來得高，因此大部分的商業遊戲都會使用此模式進行遊戲畫面繪製
 
+## Screen memory
 
+在 Character mode 下，每一個BG圖層要由那些character組成，character要在那裡出現都是由Screen memory決定
+
+以最一般的情況[256*256]
+
+## Palette memory
 
 <aside class="notice">
 character我們可以把他理解成一個大小為8*8的小圖塊，遊戲程式會在需要的時候將這些character搬移進VRAM中進行繪製，詳細請參閱<a href="#Character-drawing">Character drawing</a>
 </aside>
-
-> To authorize, use this code:
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-```
-
-```shell
-# With shell, you can just pass the correct header with each request
-curl "api_endpoint_here" \
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-```
-
-> Make sure to replace `meowmeowmeow` with your API key.
-
-Kittn uses API keys to allow access to the API. You can register a new Kittn API key at our [developer portal](http://example.com/developers).
-
-Kittn expects for the API key to be included in all API requests to the server in a header that looks like the following:
-
-`Authorization: meowmeowmeow`
-
-<aside class="notice">
-You must replace <code>meowmeowmeow</code> with your personal API key.
-</aside>
-
-# Kittens
-
-## Get All Kittens
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
-```
-
-```shell
-curl "http://example.com/api/kittens" \
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let kittens = api.kittens.get();
-```
-
-> The above command returns JSON structured like this:
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Fluffums",
-    "breed": "calico",
-    "fluffiness": 6,
-    "cuteness": 7
-  },
-  {
-    "id": 2,
-    "name": "Max",
-    "breed": "unknown",
-    "fluffiness": 5,
-    "cuteness": 10
-  }
-]
-```
-
-This endpoint retrieves all kittens.
-
-### HTTP Request
-
-`GET http://example.com/api/kittens`
-
-### Query Parameters
-
-Parameter | Default | Description
---------- | ------- | -----------
-include_cats | false | If set to true, the result will also include cats.
-available | true | If set to false, the result will include kittens that have already been adopted.
-
-<aside class="success">
-Remember — a happy kitten is an authenticated kitten!
-</aside>
-
-## Get a Specific Kitten
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get(2)
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get(2)
-```
-
-```shell
-curl "http://example.com/api/kittens/2" \
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.get(2);
-```
-
-> The above command returns JSON structured like this:
-
-```json
-{
-  "id": 2,
-  "name": "Max",
-  "breed": "unknown",
-  "fluffiness": 5,
-  "cuteness": 10
-}
-```
-
-This endpoint retrieves a specific kitten.
-
-<aside class="warning">Inside HTML code blocks like this one, you can't use Markdown, so use <code>&lt;code&gt;</code> blocks to denote code.</aside>
-
-### HTTP Request
-
-`GET http://example.com/kittens/<ID>`
-
-### URL Parameters
-
-Parameter | Description 
---------- | ----------- 
-ID | The ID of the kitten to retrieve
-
-## Delete a Specific Kitten
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```shell
-curl "http://example.com/api/kittens/2" \
-  -X DELETE \
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.delete(2);
-```
-
-> The above command returns JSON structured like this:
-
-```json
-{
-  "id": 2,
-  "deleted" : ":("
-}
-```
-
-This endpoint deletes a specific kitten.
-
-### HTTP Request
-
-`DELETE http://example.com/kittens/<ID>`
-
-### URL Parameters
-
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to delete
-
