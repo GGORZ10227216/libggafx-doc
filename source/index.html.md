@@ -64,6 +64,13 @@ Libggafx是一個模擬Gameboy Advance(GBA) PPU的函式庫，此函式庫會依
 
 GBA在繪製Background(BG)圖層，一共有6種mode，mode [0, 1 ,2]為基於character的tile mode
 mode [4 ,5, 6]則是直接繪製pixel的bitmap mode，以下會個別解釋
+
+<aside class="notice">
+以下會使用Frame來描述模擬器最終輸出的畫面(240 * 160)，Screen則是指各background圖層所指定的screen memory
+
+frame上面的每一個pixel都會依照特定規則對應到screen上的pixel
+</aside>
+
 ## Character Mode (BG Mode 0-2)
 
 Character Mode是統稱，泛指Mode 0, 1, 2這三種基於character顯示的繪製模式，這三種模式在使用上也有點差異，詳見下表
@@ -83,18 +90,55 @@ Feature:
 	</ol>
 </aside>
 
+### Frame cursor to screen cursor mapping
+libggafx在每一幀計算中，會依照當前的background mode不同，選擇正確的方式來找到frame pixel對應到的screen pixel位置
+- Text mode: 
+```
+screen_x := (frame_x + HOFS) % screen.w
+screen_y := (frame_y + VOFS) % screen.h
+```
+- Rotate/Scale mode: 
+基本上這裡的運算是一個仿射變換，規則如下所述
+$$
+    \begin{bmatrix}PA&PB\\PC&PD\end{bmatrix} \times \begin{bmatrix}Frame\_X\\Frame\_Y\end{bmatrix} + \begin{bmatrix}BG\_X\\BG\_Y\end{bmatrix} = \begin{bmatrix}Screen\_X\\Screen\_Y\end{bmatrix}
+$$
+但仔細梳理一下，可以把運算做一個簡化，得出以下結論
+```
+frame_x +1，screen_x的變動量為screen_dx1，則:
+screen_dx1 = PA 
+
+frame_y +1，screen_x的變動量為screen_dx2，則:
+screen_dx2 = PB
+
+frame_x +1，screen_y的變動量為screen_dy1，則:
+screen_dy1 = PC 
+
+frame_y +1，screen_y的變動量為screen_dy2，則:
+screen_dy2 = PD
+
+結論:
+[screen_x, screen_y] = [PA*frame_x + PB*frame_y + BG_X, PC*frame_x + PD*frame_y + BG_Y]
+由於是逐行渲染，所以我們只要從該row的第一個screen cursor開始，不停的把座標位置加上[PA, PC]就可以得出下一個pixel的screen cursor位置
+
+換行也同理，下一行的screen cursor就會從[PB*frame_y, PD*frame_y]開始算
+```
+
+### Use screen cursor to find the screen data address
+
+(here)
+
 ### Drawing step of character mode background
 
-- PPU在繪製每一個character mode background圖層時，都必須要參考:
+- PPU在繪製每一個character mode background圖層時，會參考以下兩個記憶體區段:
 	- [Screen memory](#Screen-memory)
 		- 用來描述Character如何在圖層中分布
 	- [Character memory](#Character-memory)
-		- 描述組成圖形的基本8*8圖塊(tile)之內容
+		- 描述組成圖形的基本8 * 8圖塊(tile)之內容
 - libggafx會依照以下的步驟進行每一層的Background圖層繪製
-	1. 參考該圖層的[BGCNT](#BGCNT)來解析Screen memory
-	2. 在實際繪製的過程中我們會有兩個cursor
-		- Drawing cursor: 指向實際LCD上的pixel座標
-		- Screen cursor: 指向Screen memory的pixel座標
+	1. 在進行background繪製時，libggafx內部會有另外一個screen cursor，指向screen上的某一位置[screen_x, screen_y]
+	2. 讀取Screen data，根據其標記的屬性解析character
+	3. (修改一下描述順序，還是不太順)
+	4. 在實際繪製的過程中我們會有兩個cursor
 		- Text mode: 
 			- 若當前的drawing cursor位於[60, 120], 且[HOFS, VOFS] = [10, 10],  則Screen cursor即為[60 + 10, 120 + 10] = [70, 130]
 			- 由上述流程可以得知Screen cursor有可能會超出Screen的範圍(常見於256 * 256的狀況)，因此我們必須要再做mod(eg. [cursor.x, cursor.y] = [cursor.x % SCREEN_W, cursor.y % SCREEN_H])
@@ -122,7 +166,7 @@ Feature:
 
 在 Character mode 下，每一個BG圖層要由那些character組成，character要在那裡出現都是由Screen memory決定
 
-以最一般的情況[256*256]
+以最一般的情況[256 * 256]
 
 ## Palette memory
 
